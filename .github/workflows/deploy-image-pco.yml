@@ -8,7 +8,17 @@ name: Create and publish a Docker image
 on:
   #push:
     #branches: ['main']
-  workflow_call:  
+  workflow_call:
+    inputs:
+      AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID:
+        required: true
+        type: string
+      AZURE_RESOURCE_GROUP_TENANT_ID:
+        required: true
+        type: string
+      AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET:
+        required: true
+        type: string
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   
