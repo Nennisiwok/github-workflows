@@ -7,13 +7,16 @@ name: Create and publish a Docker image
 
 on:
   workflow_call:
-    secrets:
+    inputs:
       AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID:
         required: true
+        type: string
       AZURE_RESOURCE_GROUP_TENANT_ID:
         required: true
+        type: string
       AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET:
         required: true
+        type: string
   workflow_dispatch:
 
 env:
