@@ -14,6 +14,9 @@ on:
         required: true
       AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET:
         required: true
+      AZURE_PCO_SECRETS_KEYVAULT_URL:
+        required: true
+        
   workflow_dispatch:
 
 env:
@@ -23,10 +26,6 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-    env:
-      AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID: ${{ inputs.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID }}
-      AZURE_RESOURCE_GROUP_TENANT_ID: ${{ inputs.AZURE_RESOURCE_GROUP_TENANT_ID }}
-      AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET: ${{ inputs.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET }}
     permissions:
       contents: read
       packages: write
@@ -59,3 +58,4 @@ jobs:
             AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID=${{ secrets.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID }}
             AZURE_RESOURCE_GROUP_TENANT_ID=${{ secrets.AZURE_RESOURCE_GROUP_TENANT_ID }}
             AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET=${{ secrets.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET }}
+            AZURE_PCO_SECRETS_KEYVAULT_URL=${{ secrets.AZURE_PCO_SECRETS_KEYVAULT_URL }}
