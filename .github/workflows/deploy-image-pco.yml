@@ -7,16 +7,13 @@ name: Create and publish a Docker image
 
 on:
   workflow_call:
-    inputs:
+    secrets:
       AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID:
         required: true
-        type: string
       AZURE_RESOURCE_GROUP_TENANT_ID:
         required: true
-        type: string
       AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET:
         required: true
-        type: string
   workflow_dispatch:
 
 env:
@@ -59,6 +56,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID=${{ inputs.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID }}
-            AZURE_RESOURCE_GROUP_TENANT_ID=${{ inputs.AZURE_RESOURCE_GROUP_TENANT_ID }}
-            AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET=${{ inputs.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET }}
+            AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID=${{ secrets.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID }}
+            AZURE_RESOURCE_GROUP_TENANT_ID=${{ secrets.AZURE_RESOURCE_GROUP_TENANT_ID }}
+            AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET=${{ secrets.AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET }}
