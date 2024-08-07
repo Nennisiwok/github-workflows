@@ -1,6 +1,6 @@
 # GitHub Workflows for Creating and Publishing Docker Images
 
-This repository contains two GitHub Actions workflows for building and pushing Docker images to GitHub Container Registry (GHCR). Both workflows share the majority of their steps, with the primary difference being the use of Azure secrets in `deploy-image-pco`.
+This repository contains two GitHub Actions workflows for building and pushing Docker images to GitHub Container Registry (GHCR). Both workflows share the majority of their steps, with the primary difference being the use of Github secrets in `deploy-image-pco`.
 
 ## Common Steps in Both Workflows
 
@@ -20,10 +20,6 @@ This repository contains two GitHub Actions workflows for building and pushing D
 ### Calling the Workflows from Another Workflow
 
 To call them from another workflow, use the `workflow_call` event and ensure the required secrets (for `deploy-image-pco.yml`) are provided.
-
-## Notes
-
-The workflow `deploy-image-pco.yml` is created to be used in AppDataQuality repository.
 
 ## Conclusion
 
