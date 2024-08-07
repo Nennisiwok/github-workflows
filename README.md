@@ -2,23 +2,6 @@
 
 This repository contains two GitHub Actions workflows for building and pushing Docker images to GitHub Container Registry (GHCR). Both workflows share the majority of their steps, with the primary difference being the use of Azure secrets in `deploy-image-pco`.
 
-## Workflows Overview
-
-### Workflow 1: `deploy-image-pco.yml`
-
-- **Purpose**: Builds and pushes a Docker image with additional Azure secrets.
-- **Triggers**: Can be triggered manually or called by another workflow.
-- **Secrets Required**:
-  - `AZURE_PCO_SECRETS_KEYVAULT_CLIENT_ID`
-  - `AZURE_RESOURCE_GROUP_TENANT_ID`
-  - `AZURE_PCO_SECRETS_KEYVAULT_CLIENT_SECRET`
-  - `AZURE_PCO_SECRETS_KEYVAULT_URL`
-
-### Workflow 2: `deploy-image.yml`
-
-- **Purpose**: Builds and pushes a Docker image without requiring Azure secrets.
-- **Triggers**: Can be triggered manually or called by another workflow.
-  
 ## Common Steps in Both Workflows
 
 1. **Checkout Repository**: Retrieves the code from the repository.
