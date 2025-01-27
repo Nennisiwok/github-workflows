@@ -2,9 +2,6 @@ name: Create and publish a Docker image
 
 on:
   workflow_call:
-    secrets:
-      MY_GITHUB_TOKEN:
-        required: true
 
 env:
   REGISTRY: ghcr.io
@@ -15,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write  # This allows the GITHUB_TOKEN to interact with the container registry
 
     steps:
       - name: Checkout repository
@@ -26,7 +23,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.MY_GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -41,5 +38,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }}
