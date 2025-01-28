@@ -39,5 +39,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            GITHUB_TOKEN=${{ secrets.MY_GITHUB_PAT }}  # Use the PAT here
+            MY_GITHUB_PAT=${{ secrets.MY_GITHUB_PAT }}  # Use the PAT here
 
