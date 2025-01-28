@@ -2,6 +2,9 @@ name: Create and publish a Docker image
 
 on:
   workflow_call:
+    secrets:
+      MY_GITHUB_PAT:
+        required: true  # Enforce that the secret must be provided by the caller
 
 env:
   REGISTRY: ghcr.io
