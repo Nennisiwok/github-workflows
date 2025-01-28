@@ -31,7 +31,6 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      # **Debugging Step: Check if Secret is Set**
       - name: Verify GIT_PAT Secret
         run: |
           if [ -z "${{ secrets.MY_GITHUB_PAT }}" ]; then
