@@ -31,6 +31,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      # **Debugging Step: Check if Secret is Set**
+      - name: Verify GIT_PAT Secret
+        run: |
+          if [ -z "${{ secrets.MY_GITHUB_PAT }}" ]; then
+            echo "GIT_PAT is not set."
+            exit 1
+          else
+            echo "GIT_PAT is set."
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
@@ -39,5 +49,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            GIT_PAT=${{ secrets.MY_GITHUB_PAT }}  
-
+            GIT_PAT=${{ secrets.MY_GITHUB_PAT }}
