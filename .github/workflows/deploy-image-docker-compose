@@ -1,0 +1,43 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Create and publish a Docker image
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker images with Docker Compose
+        run: docker-compose -f docker-compose.yml build
+
+      - name: Tag and Push Docker Images
+        run: |
+          docker tag chatbotauto-frontend_react-app ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+          docker tag chatbotauto-backend_symfony-app ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+          
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
