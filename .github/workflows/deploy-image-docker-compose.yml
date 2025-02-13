@@ -33,8 +33,8 @@ jobs:
         run: |
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
 
-          FRONTEND_IMAGE=$(docker compose config | awk '/image:/ && /frontend/ {print $2}')
-          BACKEND_IMAGE=$(docker compose config | awk '/image:/ && /backend/ {print $2}')
+          FRONTEND_IMAGE=$(docker compose config | grep 'react-app' -A 2 | grep 'image' | awk '{print $2}')
+          BACKEND_IMAGE=$(docker compose config | grep 'symfony-app' -A 2 | grep 'image' | awk '{print $2}')
 
           echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
           echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
