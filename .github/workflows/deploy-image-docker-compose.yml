@@ -29,12 +29,12 @@ jobs:
       - name: Build Docker images with Docker Compose
         run: docker compose -f docker-compose.yml build
 
-      - name: Get docker-compose image names
+      - name: Hardcode docker-compose image names
         run: |
+          FRONTEND_IMAGE="chatbotauto-frontend"
+          BACKEND_IMAGE="chatbotauto-backend"
+          
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-
-          FRONTEND_IMAGE=$(yq eval '.services["react-app"].image' docker-compose.yml)
-          BACKEND_IMAGE=$(yq eval '.services["symfony-app"].image' docker-compose.yml)
 
           echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
           echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
