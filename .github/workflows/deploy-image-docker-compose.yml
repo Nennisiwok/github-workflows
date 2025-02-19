@@ -39,6 +39,9 @@ jobs:
           echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
           echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
           echo "IMAGE_NAME_LC=$IMAGE_NAME_LC" >> $GITHUB_ENV
+      - name: Load .env file
+        run: |
+          cp ./chatbotauto-backend/.env .env
 
       - name: Tag and Push Docker Images
         run: |
