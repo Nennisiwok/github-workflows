@@ -46,5 +46,4 @@ jobs:
           docker tag $BACKEND_IMAGE ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}-backend:latest
 
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}-nginx:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}-frontend:latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}-backend:latest
