@@ -1,4 +1,4 @@
-name: Build and Push Docker Images Dynamically
+name: Build and Push Docker Images Dynamically (no yq)
 
 on:
   workflow_call:
@@ -19,15 +19,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up yq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y yq
-
-      - name: Extract service names from docker-compose
+      - name: Extract service names manually from docker-compose.yml
         id: extract_services
         run: |
-          SERVICES=$(yq '.services | keys | .[]' docker-compose.yml)
+          SERVICES=$(awk '/services:/ {flag=1; next} /^[^[:space:]]/ {flag=0} flag && /^[[:space:]]{2}[a-zA-Z0-9_-]+:/ {gsub(":",""); print $1}' docker-compose.yml)
+          
           echo "SERVICES<<EOF" >> $GITHUB_ENV
           echo "$SERVICES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
@@ -47,8 +43,7 @@ jobs:
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           
           for SERVICE in $SERVICES; do
-            TAG="${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:latest"
-            echo "Tagging $SERVICE -> $TAG"
-            docker tag "${IMAGE_NAME_LC}_${SERVICE}" "$TAG"
-            docker push "$TAG"
+            echo "Procesando servicio: $SERVICE"
+            docker tag "${IMAGE_NAME_LC}_${SERVICE}" "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:latest"
+            docker push "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:latest"
           done
