@@ -30,7 +30,9 @@ jobs:
         run: docker compose -f docker-compose.yml build
  
       - name: Install yq
-        run: sudo apt-get update && sudo apt-get install -y yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
  
       - name: Tag and Push Docker Images dynamically (with image detection)
         run: |
