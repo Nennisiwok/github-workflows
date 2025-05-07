@@ -29,20 +29,24 @@ jobs:
       - name: Build Docker images with Docker Compose
         run: docker compose -f docker-compose.yml build
 
-      - name: Install yq
-        run: |
-          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq
-
-      - name: Tag and Push Docker Images dynamically (with image detection)
+      - name: Tag and push images dynamically (no yq, no txt)
         run: |
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          SERVICES=$(yq '.services | keys | .[]' docker-compose.yml)
-
-          for SERVICE in $SERVICES; do
-            IMAGE=$(yq -r ".services.\"$SERVICE\".image // \"$SERVICE\"" docker-compose.yml)
-
+      
+          docker compose config | awk '
+            $1 == "services:" {in_services=1; next}
+            in_services && /^[^ ]/ {in_services=0}
+            in_services {
+              if ($1 ~ /^[^:]+:$/) {
+                service=$1
+                gsub(":", "", service)
+              }
+              if ($1 == "image:") {
+                print service " " $2
+              }
+            }
+          ' | while read SERVICE IMAGE; do
             docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
-
             docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
           done
+
