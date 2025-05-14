@@ -34,7 +34,7 @@ jobs:
           sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
           sudo chmod +x /usr/bin/yq
  
-      - name: Tag and Push Docker Images dynamically (with image detection)
+      - name: Tag and Push Docker Images dynamically
         run: |
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           SERVICES=$(yq '.services | keys | .[]' docker-compose.yml)
@@ -43,11 +43,17 @@ jobs:
           for SERVICE in $SERVICES; do
             IMAGE=$(yq -r ".services.\"$SERVICE\".image // \"$SERVICE\"" docker-compose.yml)
 
-            docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
-            docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
+            if docker image inspect "$IMAGE" > /dev/null 2>&1; then
+              echo "Tagging and pushing image: $IMAGE"
 
-            if [[ "$BRANCH_NAME" == "main" ]]; then
-              docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
-              docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
+              docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
+              docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
+
+              if [[ "$BRANCH_NAME" == "main" ]]; then
+                docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
+                docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
+              fi
+            else
+              echo "Skipping external or unbuilt image: $IMAGE"
             fi
           done
