@@ -30,7 +30,7 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL }}
         run: |
-          reviewers_json=$(echo '${{ inputs.reviewers }}' | jq -c '.')
+          reviewers_json=$(echo '${{ inputs.reviewers }}' | jq -R -s -c 'split("\n")[:-1]')
           payload=$(jq -n \
             --arg title "${{ inputs.pr_title }}" \
             --arg url "${{ inputs.pr_url }}" \
