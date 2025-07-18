@@ -1,4 +1,6 @@
-name: Notify Teams on PR
+# .github/workflows/notify_teams.yml
+
+name: Notify Teams Power Automate
 
 on:
   workflow_call:
@@ -16,11 +18,8 @@ on:
         required: true
         type: string
       reviewers:
-        required: false
-        type: string
-    secrets:
-      POWER_AUTOMATE_URL:
         required: true
+        type: string
 
 jobs:
   notify:
@@ -30,13 +29,16 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL }}
         run: |
-          reviewers_json=$(echo '${{ inputs.reviewers }}' | jq -R -s -c 'split("\n")[:-1]')
+
+          # Construye el payload
           payload=$(jq -n \
             --arg title "${{ inputs.pr_title }}" \
             --arg url "${{ inputs.pr_url }}" \
             --arg from_branch "${{ inputs.from_branch }}" \
             --arg to_branch "${{ inputs.to_branch }}" \
-            --argjson reviewers "$reviewers_json" \
-            '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers}')
-          
+            --argjson reviewers "${{ inputs.reviewers }}" \
+            '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers}'
+          )
+
+          # Envía el payload a Power Automate
           curl -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK_URL"
