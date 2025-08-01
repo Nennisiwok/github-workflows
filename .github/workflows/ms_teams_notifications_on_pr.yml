@@ -1,0 +1,51 @@
+name: Notify Teams
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        required: true
+        type: string
+      url:
+        required: true
+        type: string
+      from_branch:
+        required: true
+        type: string
+      to_branch:
+        required: true
+        type: string
+      reviewers:
+        required: true
+        type: string
+      pr_state:
+        required: true
+        type: string
+    secrets:
+      POWER_AUTOMATE_URL:
+        required: true
+
+jobs:
+  call-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to Teams
+        env:
+          WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL }}
+        run: |
+          # Parse reviewers string (expected as JSON array string)
+          reviewers='${{ inputs.reviewers }}'
+
+          # Construye el payload
+          payload=$(jq -n \
+            --arg title "${{ inputs.title }}" \
+            --arg url "${{ inputs.url }}" \
+            --arg from_branch "${{ inputs.from_branch }}" \
+            --arg to_branch "${{ inputs.to_branch }}" \
+            --arg pr_state "${{ inputs.pr_state }}" \
+            --argjson reviewers "$reviewers" \
+            '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers, state: $pr_state}}'
+          )
+
+          echo "Payload to send: $payload"
+          curl -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK_URL"
