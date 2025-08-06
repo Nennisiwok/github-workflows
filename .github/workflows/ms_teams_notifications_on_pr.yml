@@ -44,7 +44,7 @@ jobs:
             --arg to_branch "${{ inputs.to_branch }}" \
             --arg pr_state "${{ inputs.pr_state }}" \
             --argjson reviewers "$reviewers" \
-            '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers, state: $pr_state}'
+            '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers, pr_state: $pr_state}'
           )
 
           echo "Payload to send: $payload"
