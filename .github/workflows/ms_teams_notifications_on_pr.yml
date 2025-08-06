@@ -22,7 +22,7 @@ on:
         required: true
         type: string
     secrets:
-      POWER_AUTOMATE_URL:
+      POWER_AUTOMATE_URL_CLOSED:
         required: true
 
 jobs:
