@@ -26,7 +26,20 @@ on:
         required: true
 
 jobs:
+  extract_meta:
+      runs-on: ubuntu-latest
+      outputs:
+        reviewers: ${{ steps.extract.outputs.reviewers }}
+      steps:
+        - name: Extract PR metadata
+          id: extract
+          run: |
+            reviewers=$(jq -c '[.pull_request.requested_reviewers[].login]' "$GITHUB_EVENT_PATH")
+            if [[ "$reviewers" == "null" ]]; then
+              reviewers='[]'
+            fi
   call-notify:
+    needs: extract_meta
     runs-on: ubuntu-latest
     steps:
       - name: Send notification to Teams
