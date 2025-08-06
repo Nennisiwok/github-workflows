@@ -27,19 +27,22 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL_CLOSED }}
         run: |
-          # Parse reviewers string (expected as JSON array string)
-          reviewers='${{ inputs.reviewers }}'
-
+          # Recoge reviewers como JSON válido
+          reviewers='${{ needs.extract_meta.outputs.reviewers }}'
+  
+          echo "Reviewers JSON: $reviewers"
+  
           # Construye el payload
           payload=$(jq -n \
             --arg title "${{ github.event.pull_request.title }}" \
-            --arg url "${{ github.event.pull_request.url }}" \
-            --arg from_branch "${{ github.event.pull_request.from_branch }}" \
-            --arg to_branch "${{ github.event.pull_request.to_branch }}" \
-            --arg pr_state "${{ github.event.pull_request.pr_state }}" \
+            --arg url "${{ github.event.pull_request.html_url }}" \
+            --arg from_branch "${{ github.event.pull_request.head.ref }}" \
+            --arg to_branch "${{ github.event.pull_request.base.ref }}" \
+            --arg pr_state "${{ github.event.action }}" \
             --argjson reviewers "$reviewers" \
             '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers, pr_state: $pr_state}'
           )
-
+  
           echo "Payload to send: $payload"
           curl -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK_URL"
+
