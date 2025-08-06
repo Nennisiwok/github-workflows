@@ -2,47 +2,51 @@ name: Notify Teams
 
 on:
   workflow_call:
+    inputs:
+      title:
+        required: true
+        type: string
+      url:
+        required: true
+        type: string
+      from_branch:
+        required: true
+        type: string
+      to_branch:
+        required: true
+        type: string
+      reviewers:
+        required: true
+        type: string
+      pr_state:
+        required: true
+        type: string
     secrets:
       POWER_AUTOMATE_URL_CLOSED:
         required: true
 
 jobs:
-  extract_meta:
-      runs-on: ubuntu-latest
-      outputs:
-        reviewers: ${{ steps.extract.outputs.reviewers }}
-      steps:
-        - name: Extract PR metadata
-          id: extract
-          run: |
-            reviewers=$(jq -c '[.pull_request.requested_reviewers[].login]' "$GITHUB_EVENT_PATH")
-            if [[ "$reviewers" == "null" ]]; then
-              reviewers='[]'
-            fi
   call-notify:
-    needs: extract_meta
     runs-on: ubuntu-latest
     steps:
       - name: Send notification to Teams
         env:
           WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL_CLOSED }}
         run: |
-          # Recoge reviewers como JSON válido
-          reviewers='${{ needs.extract_meta.outputs.reviewers }}'
-  
-          echo "Reviewers JSON: $reviewers"
-  
+          # Parse reviewers string (expected as JSON array string)
+          reviewers='${{ inputs.reviewers }}'
+
           # Construye el payload
           payload=$(jq -n \
-            --arg title "${{ github.event.pull_request.title }}" \
-            --arg url "${{ github.event.pull_request.html_url }}" \
-            --arg from_branch "${{ github.event.pull_request.head.ref }}" \
-            --arg to_branch "${{ github.event.pull_request.base.ref }}" \
-            --arg pr_state "${{ github.event.action }}" \
+            --arg title "${{ inputs.title }}" \
+            --arg url "${{ inputs.url }}" \
+            --arg from_branch "${{ inputs.from_branch }}" \
+            --arg to_branch "${{ inputs.to_branch }}" \
+            --arg pr_state "${{ inputs.pr_state }}" \
             --argjson reviewers "$reviewers" \
             '{pr_title: $title, pr_url: $url, from_branch: $from_branch, to_branch: $to_branch, reviewers: $reviewers, pr_state: $pr_state}'
           )
-  
+
           echo "Payload to send: $payload"
           curl -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK_URL"
-
+ 
