@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Send notification to Teams
         env:
-          WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL }}
+          WEBHOOK_URL: ${{ secrets.POWER_AUTOMATE_URL_CLOSED }}
         run: |
           # Parse reviewers string (expected as JSON array string)
           reviewers='${{ inputs.reviewers }}'
