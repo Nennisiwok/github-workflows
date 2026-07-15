@@ -1,59 +1,136 @@
 name: Create and publish a Docker image
- 
+
 on:
   workflow_call:
-  workflow_dispatch:
- 
+    inputs:
+      use_azure_artifacts:
+        description: Enable authentication with Azure Artifacts
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      AZURE_ARTIFACTS_USERNAME:
+        required: false
+
+      AZURE_ARTIFACTS_READ_TOKEN:
+        required: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
- 
+
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
- 
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
- 
+        uses: actions/checkout@v6
+
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
- 
+
+      # Solo se ejecuta para proyectos que usan Azure Artifacts.
+      - name: Validate Azure Artifacts credentials
+        if: ${{ inputs.use_azure_artifacts }}
+        shell: bash
+        env:
+          AZURE_ARTIFACTS_USERNAME: ${{ secrets.AZURE_ARTIFACTS_USERNAME }}
+          AZURE_ARTIFACTS_READ_TOKEN: ${{ secrets.AZURE_ARTIFACTS_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${AZURE_ARTIFACTS_USERNAME}" ]]; then
+            echo "::error::AZURE_ARTIFACTS_USERNAME is missing"
+            exit 1
+          fi
+
+          if [[ -z "${AZURE_ARTIFACTS_READ_TOKEN}" ]]; then
+            echo "::error::AZURE_ARTIFACTS_READ_TOKEN is missing"
+            exit 1
+          fi
+
+      # Crea un .netrc temporal fuera del repositorio.
+      - name: Create temporary Azure Artifacts credentials
+        if: ${{ inputs.use_azure_artifacts }}
+        shell: bash
+        env:
+          AZURE_ARTIFACTS_USERNAME: ${{ secrets.AZURE_ARTIFACTS_USERNAME }}
+          AZURE_ARTIFACTS_READ_TOKEN: ${{ secrets.AZURE_ARTIFACTS_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          NETRC_FILE="${RUNNER_TEMP}/azure-artifacts.netrc"
+
+          umask 077
+
+          {
+            printf 'machine pkgs.dev.azure.com\n'
+            printf '  login %s\n' "${AZURE_ARTIFACTS_USERNAME}"
+            printf '  password %s\n' "${AZURE_ARTIFACTS_READ_TOKEN}"
+          } > "${NETRC_FILE}"
+
+          echo "AZURE_NETRC_FILE=${NETRC_FILE}" >> "${GITHUB_ENV}"
+
       - name: Build Docker images with Docker Compose
         run: docker compose -f docker-compose.yml build
- 
+
       - name: Install yq
         run: |
-          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo wget \
+            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+            -O /usr/bin/yq
+
           sudo chmod +x /usr/bin/yq
- 
+
       - name: Tag and Push Docker Images dynamically
+        shell: bash
         run: |
+          set -euo pipefail
+
           IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           SERVICES=$(yq '.services | keys | .[]' docker-compose.yml)
-          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
+          BRANCH_NAME=$(echo "${GITHUB_REF_NAME}" | tr '/' '-')
 
           for SERVICE in $SERVICES; do
-            IMAGE=$(yq -r ".services.\"$SERVICE\".image // \"$SERVICE\"" docker-compose.yml)
+            IMAGE=$(yq -r ".services.\"${SERVICE}\".image // \"${SERVICE}\"" docker-compose.yml)
 
-            if docker image inspect "$IMAGE" > /dev/null 2>&1; then
-              echo "Tagging and pushing image: $IMAGE"
+            if docker image inspect "${IMAGE}" > /dev/null 2>&1; then
+              echo "Tagging and pushing image: ${IMAGE}"
 
-              docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
-              docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:$BRANCH_NAME"
+              docker tag \
+                "${IMAGE}" \
+                "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:${BRANCH_NAME}"
 
-              if [[ "$BRANCH_NAME" == "main" ]]; then
-                docker tag "$IMAGE" "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
-                docker push "${{ env.REGISTRY }}/$IMAGE_NAME_LC-$SERVICE:latest"
+              docker push \
+                "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:${BRANCH_NAME}"
+
+              if [[ "${BRANCH_NAME}" == "main" ]]; then
+                docker tag \
+                  "${IMAGE}" \
+                  "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:latest"
+
+                docker push \
+                  "${{ env.REGISTRY }}/${IMAGE_NAME_LC}-${SERVICE}:latest"
               fi
             else
-              echo "Skipping external or unbuilt image: $IMAGE"
+              echo "Skipping external or unbuilt image: ${IMAGE}"
             fi
           done
+
+      - name: Remove temporary Azure Artifacts credentials
+        if: ${{ always() && inputs.use_azure_artifacts }}
+        shell: bash
+        run: |
+          if [[ -n "${AZURE_NETRC_FILE:-}" ]]; then
+            rm -f "${AZURE_NETRC_FILE}"
+          fi
