@@ -81,7 +81,14 @@ jobs:
 
           echo "AZURE_NETRC_FILE=${NETRC_FILE}" >> "${GITHUB_ENV}"
 
+      # Compose construye con buildx bake. Desde que el runner trae buildx 0.38
+      # (octubre de 2026), bake bloquea leer ficheros de fuera del proyecto,
+      # como el .netrc de RUNNER_TEMP. La variable solo desactiva ese control;
+      # los demás permisos (network.host, security.insecure) se siguen
+      # comprobando. Tiene que ser "0": buildx no acepta un valor vacío.
       - name: Build Docker images with Docker Compose
+        env:
+          BUILDX_BAKE_ENTITLEMENTS_FS: "0"
         run: docker compose -f docker-compose.yml build
 
       - name: Install yq
